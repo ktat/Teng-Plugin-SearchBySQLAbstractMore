@@ -81,7 +81,7 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Create complex SQL using power of SQL::Abstract::More (compatible sytax with Teng's search).
+Create complex SQL using power of SQL::Abstract::More (compatible usage with Teng's search).
 
  $teng->search_by_sql_abstract_more(
    'table1',
@@ -111,7 +111,7 @@ Create complex SQL using power of SQL::Abstract::More (compatible sytax with Ten
  # GROUP BY x, y HAVING max_age < 10
  # LIMIT 10 OFFSET 20;
 
-Create complex SQL using power of SQL::Abstract::More (SQL::Abstract::More original sytaxs).
+Create complex SQL using power of SQL::Abstract::More (SQL::Abstract::More original usage).
 
  $teng->search_by_sql_abstract_more(
    {
@@ -136,7 +136,7 @@ Create complex SQL using power of SQL::Abstract::More (SQL::Abstract::More origi
 
 Using pager
 
-Compatible syntax.
+Compatible usage.
 
  $teng->search_by_sql_abstract_more(
    'table', {
@@ -151,7 +151,7 @@ Compatible syntax.
    },
  );
 
-Originaly syntax.
+Originaly usage(-page and -rows options are added).
 
  $teng->search_by_sql_abstract_more(
    {
