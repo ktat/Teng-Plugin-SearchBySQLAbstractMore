@@ -17,8 +17,8 @@ sub search_by_sql_abstract_more {
     if (ref $table_name eq 'HASH') {
         my $_opt = $table_name;
         $table_name = ref $_opt->{-from} eq 'ARRAY' ? $_opt->{-from}->[0] eq '-join'
-            ? $_opt->{-from}->[1] : $_opt->{-from}->[0]
-                : $_opt->{-from};
+                    ? $_opt->{-from}->[1]           : $_opt->{-from}->[0]
+                                                    : $_opt->{-from};
         $table_name =~s{\|.+$}{};
         %args = %$_opt;
     } else {
@@ -27,9 +27,10 @@ sub search_by_sql_abstract_more {
             my $_k = $key =~m{^\-} ? $key : '-' . $key;
             $args{$_k} ||= $_opt->{$key};
         }
-        $args{-where} = $where;
+        $args{-where} = $where || {};
+        _compat_sql_mager_usage(\%args);
     }
-    my $table = $self->schema->get_table($table_name) or Carp::croak("'$table_name' is unknown table");
+    my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
     my ($sql, @binds) = SQL::Abstract::More->new->select(%args);
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
@@ -45,6 +46,35 @@ sub search_by_sql_abstract_more {
     return $itr;
 }
 
+sub _compat_sql_mager_usage {
+    my ($args) = @_;
+    if (exists $args->{-order_by}) {
+        if (ref $args->{-order_by} eq 'HASH') {
+            my ($column, $asc_desc) = each %{$args->{-order_by}};
+            $asc_desc = lc $asc_desc;
+            if ($asc_desc eq 'asc' or $asc_desc eq 'desc') {
+                $args->{-order_by} = {'-' . $asc_desc, $column};
+            }
+            $args->{-order_by} = [{%{$args->{-order_by}}}];
+        } elsif (ref $args->{-order_by} eq 'ARRAY') {
+            foreach my $def (@{$args->{-order_by}}) {
+                if (ref $def eq 'HASH') {
+                    my ($column, $asc_desc) = each %{$def};
+                    $asc_desc = lc $asc_desc;
+                    if ($asc_desc eq 'asc' or $asc_desc eq 'desc') {
+                        $def = {'-' . $asc_desc, $column};
+                    }
+                }
+            }
+        }
+    }
+    if (exists $args->{-columns}) {
+        foreach my $col (@{$args->{-columns}}) {
+            $col = $$col if ref $col;
+        }
+    }
+}
+
 sub replace_teng_search {
     undef &Teng::search;
     *Teng::search = \*search_by_sql_abstract_more;
@@ -52,13 +82,14 @@ sub replace_teng_search {
 
 sub install_sql_abstract_more {
     my ($self, $pager_plugin) = @_;
+    my $class = ref $self ? ref $self : $self;
     Teng::Plugin::SearchBySQLAbstractMore->replace_teng_search;
     if ($pager_plugin) {
-        (ref $self)->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
-                                 {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+        $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
+                            {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
     } else {
-        (ref $self)->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
-                                 {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+        $class->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
+                            {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
     }
 }
 

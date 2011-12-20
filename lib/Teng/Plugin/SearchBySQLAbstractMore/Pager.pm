@@ -6,7 +6,7 @@ use utf8;
 use Carp ();
 use Teng::Iterator;
 use Data::Page::NoTotalEntries;
-use SQL::Abstract::More;
+use Teng::Plugin::SearchBySQLAbstractMore ();
 
 our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
 
@@ -31,7 +31,7 @@ sub search_by_sql_abstract_more_with_pager {
             my $_k = $key =~m{^\-} ? $key : '-' . $key;
             $args{$_k} ||= $_opt->{$key};
         }
-        $args{-where} = $where;
+        $args{-where} = $where || {};
         for (qw/page rows/) {
             Carp::croak("missing mandatory parameter: $_") if not exists $_opt->{$_} and  not exists $_opt->{'-' . $_};
         }
@@ -40,8 +40,10 @@ sub search_by_sql_abstract_more_with_pager {
 
         $args{-limit}  = $rows + 1;
         $args{-offset} = $rows * ($page - 1);
+
+        Teng::Plugin::SearchBySQLAbstractMore::_compat_sql_mager_usage(\%args);
     }
-    my $table = $self->schema->get_table($table_name) or Carp::croak("'$table_name' is unknown table");
+    my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
 
     my ($sql, @binds) = SQL::Abstract::More->new->select(%args);
 
