@@ -12,40 +12,11 @@ our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
 
 sub search_by_sql_abstract_more_with_pager {
     my ($self, $table_name, $where, $_opt) = @_;
-    my (%args, $rows, $page);
-    if (ref $table_name eq 'HASH') {
-        my $_opt = $table_name;
-        $table_name = ref $_opt->{-from} eq 'ARRAY' ? $_opt->{-from}->[0] eq '-join'
-            ? $_opt->{-from}->[1] : $_opt->{-from}->[0]
-                : $_opt->{-from};
-        $table_name =~s{\|.+$}{};
-        %args = %$_opt;
-        if ($page = delete $args{-page}) {
-            $rows = delete $args{-rows};
-            $args{-offset} = $rows * ($page - 1);
-            $args{-limit}  = $rows;
-        }
-    } else {
-        $_opt->{from} ||= ($_opt->{-from} || $table_name);
-        foreach my $key (keys %$_opt) {
-            my $_k = $key =~m{^\-} ? $key : '-' . $key;
-            $args{$_k} ||= $_opt->{$key};
-        }
-        $args{-where} = $where || {};
-        for (qw/page rows/) {
-            Carp::croak("missing mandatory parameter: $_") if not exists $_opt->{$_} and  not exists $_opt->{'-' . $_};
-        }
-        $page = delete $args{page} || delete $args{-page};
-        $rows = delete $args{rows} || delete $args{-rows};
+    ($table_name, my($args, $rows, $page)) = Teng::Plugin::SearchBySQLAbstractMore::_arrange_args($table_name, $where, $_opt);
 
-        $args{-limit}  = $rows;
-        $args{-offset} = $rows * ($page - 1);
-
-        Teng::Plugin::SearchBySQLAbstractMore::_compat_sql_mager_usage(\%args);
-    }
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
 
-    my ($sql, @binds) = SQL::Abstract::More->new->select(%args);
+    my ($sql, @binds) = SQL::Abstract::More->new->select(%$args);
     $sql =~s{^\s*SELECT }{SELECT SQL_CALC_FOUND_ROWS }i;
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;

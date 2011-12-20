@@ -12,26 +12,9 @@ our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pa
 
 sub search_by_sql_abstract_more {
     my ($self, $table_name, $where, $_opt) = @_;
-    my %args;
-    use Data::Dumper;
-    if (ref $table_name eq 'HASH') {
-        my $_opt = $table_name;
-        $table_name = ref $_opt->{-from} eq 'ARRAY' ? $_opt->{-from}->[0] eq '-join'
-                    ? $_opt->{-from}->[1]           : $_opt->{-from}->[0]
-                                                    : $_opt->{-from};
-        $table_name =~s{\|.+$}{};
-        %args = %$_opt;
-    } else {
-        $_opt->{from} ||= ($_opt->{-from} || $table_name);
-        foreach my $key (keys %$_opt) {
-            my $_k = $key =~m{^\-} ? $key : '-' . $key;
-            $args{$_k} ||= $_opt->{$key};
-        }
-        $args{-where} = $where || {};
-        _compat_sql_mager_usage(\%args);
-    }
+    ($table_name, my $args) = _arrange_args($table_name, $where, $_opt);
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
-    my ($sql, @binds) = SQL::Abstract::More->new->select(%args);
+    my ($sql, @binds) = SQL::Abstract::More->new->select(%$args);
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
     my $itr = Teng::Iterator->new(
@@ -46,7 +29,42 @@ sub search_by_sql_abstract_more {
     return $itr;
 }
 
-sub _compat_sql_mager_usage {
+sub _arrange_args {
+    my ($table_name, $where, $_opt) = @_;
+    my ($page, $rows, %args);
+    if (ref $table_name eq 'HASH') {
+        my $_opt = $table_name;
+        $table_name = ref $_opt->{-from} eq 'ARRAY' ? $_opt->{-from}->[0] eq '-join'
+                    ? $_opt->{-from}->[1]           : $_opt->{-from}->[0]
+                                                    : $_opt->{-from};
+        $table_name =~s{\|.+$}{};
+        %args = %$_opt;
+        if ($page = delete $args{-page}) {
+            $rows = delete $args{-rows};
+            $args{-offset} = $rows * ($page - 1);
+            $args{-limit}  = $rows;
+        }
+
+    } else {
+        $_opt->{from} ||= ($_opt->{-from} || $table_name);
+        foreach my $key (keys %$_opt) {
+            my $_k = $key =~m{^\-} ? $key : '-' . $key;
+            $args{$_k} ||= $_opt->{$key};
+        }
+        $args{-where} = $where || {};
+
+        if ($page = delete $args{page} || delete $args{-page}) {
+            $rows = delete $args{rows} || delete $args{-rows};
+            $args{-limit}  = $rows;
+            $args{-offset} = $rows * ($page - 1);
+        }
+
+        _arrange_order_by_and_columns(\%args);
+    }
+    return($table_name, \%args, $rows, $page);
+}
+
+sub _arrange_order_by_and_columns {
     my ($args) = @_;
     if (exists $args->{-order_by}) {
         if (ref $args->{-order_by} eq 'HASH') {
@@ -81,15 +99,17 @@ sub replace_teng_search {
 }
 
 sub install_sql_abstract_more {
-    my ($self, $pager_plugin) = @_;
+    my ($self, %opt) = @_;
     my $class = ref $self ? ref $self : $self;
     Teng::Plugin::SearchBySQLAbstractMore->replace_teng_search;
-    if ($pager_plugin) {
-        $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
-                            {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
-    } else {
-        $class->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
-                            {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+    if (my $pager_plugin = $opt{pager}) {
+        if ($pager_plugin ne '1') {
+            $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
+                                {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+        } else {
+            $class->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
+                                {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+        }
     }
 }
 
@@ -216,7 +236,7 @@ and you want to use same usage with SQL::Abstract::More.
 
 =head2 install_sql_abstract_more
 
- $your_class->install_sql_abstract_more;
+ $your_class->install_sql_abstract_more(pager => 1);
 
 It call replace_teng_search and loads SearchBySQLAbstractMore::Pager::SQLFoundRows with alias option.
 C<search> and C<search_with_pager> are replaced with them.
@@ -225,8 +245,8 @@ As first arugument, pager plugin name can be specified.
 If you want to use SearchBySQLAbstractMore::Pager instead of SearchBySQLAbstractMore::Pager::SQLFoundRows,
 pass 'Pager' as arugment.
 
- $your_class->install_sql_abstract_more('Pager');
- $your_class->install_sql_abstract_more('Pager::MySQLFoundRows'); # as same as no argument
+ $your_class->install_sql_abstract_more(pager => 'Pager');
+ $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows'); # as same as no argument
 
 =head1 AUTHOR
 

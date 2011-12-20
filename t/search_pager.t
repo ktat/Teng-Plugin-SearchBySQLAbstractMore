@@ -67,6 +67,7 @@ subtest 'search with join' => sub {
 
     is $pager->current_page, 1;
     is $pager->first, 1;
+    is $pager->has_next, 1;
     is $pager->last, 2;
 };
 
@@ -93,7 +94,7 @@ subtest 'search original with join' => sub {
 
     is $row->id, 3;
     is $row->name, 'java2';
-
+    is $pager->has_next, 0;
     is $pager->first, 3;
     is $pager->last, 3;
 };
