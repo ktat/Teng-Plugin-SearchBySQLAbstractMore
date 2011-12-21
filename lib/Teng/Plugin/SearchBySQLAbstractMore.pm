@@ -171,34 +171,33 @@ Create complex SQL using SQL::Abstract::More.
 
 Compatible usage with Teng's search method.
 
- $teng->search_by_sql_abstract_more(
-   'table1',
-   { name => { like => '%perl%'},
-     -and => [
-          {x => 1},
-          {y => {-or => [{'>' => 2}, {'<' => 10}]}},
-     ],
-   },
-   {
-     from     => [-join,
-                  'table1|t1',
-                  't1.id=t2.id'
-                  'table2|t2',
-                  't1.id=t3.table1_id,t2.id=t3.table2_id',
-                  'table3|t3',
-                 ],
-     columns  => ['x', 'y', 'min(age) as min_age', 'max(age) as max_age'],
-     group_by => ['x', 'y'],
-     having   => ['max_age < 10'],
-   },
- );
- # SELECT x, y, min(age) AS min_age, max(age) AS max_age
- # FROM table_name as t1
- # LEFT JOIN table_name2 ON t1.id=t2.table1_id
- # LEFT JOIN table_name3 ON t1.id=t3.table1_id AND t2.id=t3.table2_id
- # WHERE name like '%perl%' AND (x = 1 AND (y > 2 OR y < 10))
- # GROUP BY x, y HAVING max_age < 10
- # LIMIT 10 OFFSET 20;
+ $teng->search_by_sql_abstract_more
+    ('table1',
+     { name => { like => '%perl%'},
+       -and => [
+                {x => 1},
+                {y => [-or => {'>' => 2}, {'<' => 10}]},
+               ],
+     },
+     {
+      from     => ['-join',
+                   'table1|t1',
+                   't1.id=t2.id',
+                   'table2|t2',
+                   't1.id=t3.table1_id,t2.id=t3.table2_id',
+                   'table3|t3',
+                  ],
+      columns  => ['x', 'y', 'min(age) as min_age', 'max(age) as max_age'],
+      group_by => ['x', 'y'],
+      having   => {'max_age' => {'<' => 10}},
+     },
+    );
+ # SELECT x, y, min(age) as min_age, max(age) as max_age
+ #   FROM table1 AS t1
+ #     INNER JOIN table2 AS t2 ON ( t1.id = t2.id )
+ #     INNER JOIN table3 AS t3 ON ( ( t1.id = t3.table1_id AND t2.id = t3.table2_id ) )
+ #   WHERE ( ( ( x = ? AND ( y > ? OR y < ? ) ) AND name LIKE ? ) )
+ #   GROUP BY x, y  HAVING ( max_age < ? );
 
 SQL::Abstract::More original usage(as first argument, use hash ref instead of teble name):
 
@@ -207,18 +206,18 @@ SQL::Abstract::More original usage(as first argument, use hash ref instead of te
      -columns  => ['x', 'y', 'min(age) as min_age', 'max(age) as max_age'],
      -from     => [-join,
                    'table1|t1',
-                   't1.id=t2.id'
+                   't1.id=t2.id',
                    'table2|t2',
                    't1.id=t3.table1_id,t2.id=t3.table2_id',
                    'table3|t3',
                  ],
      -group_by => ['x', 'y'],
-     -having   => ['max_age < 10'],
+     -having   => {'max_age' => {'<' => 10'}},
      -where => {
         name => { like => '%perl%'},
         -and => [
             {x => 1},
-             {y => {-or => [{'>' => 2}, {'<' => 10}]}},
+            {y => [-or => {'>' => 2}, {'<' => 10}]},
         ],
       },
    },

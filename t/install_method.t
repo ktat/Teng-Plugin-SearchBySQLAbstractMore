@@ -125,8 +125,8 @@ subtest 'search with join' => sub {
                   'mock_basic2|b',
                  ],
         -order_by => ['a.id'],
-	-page     => 1,
-	-rows     => 2,
+        -page     => 1,
+        -rows     => 2,
        });
 
     is ref $pager, 'Data::Page::NoTotalEntries';
@@ -160,8 +160,8 @@ subtest 'search original with join' => sub {
                   'mock_basic2|b',
                  ],
         -order_by => ['a.id'],
-	-page     => 2,
-	-rows     => 2,
+        -page     => 2,
+        -rows     => 2,
        });
 
     is ref $pager, 'Data::Page::NoTotalEntries';
