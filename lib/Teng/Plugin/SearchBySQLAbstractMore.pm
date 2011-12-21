@@ -132,7 +132,9 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Create complex SQL using SQL::Abstract::More (compatible usage with Teng's search).
+Create complex SQL using SQL::Abstract::More.
+
+Compatible usage with Teng's search method.
 
  $teng->search_by_sql_abstract_more(
    'table1',
@@ -143,7 +145,8 @@ Create complex SQL using SQL::Abstract::More (compatible usage with Teng's searc
      ],
    },
    {
-     from     => ['table1|t1',
+     from     => [-join,
+                  'table1|t1',
                   't1.id=t2.id'
                   'table2|t2',
                   't1.id=t3.table1_id,t2.id=t3.table2_id',
@@ -162,12 +165,13 @@ Create complex SQL using SQL::Abstract::More (compatible usage with Teng's searc
  # GROUP BY x, y HAVING max_age < 10
  # LIMIT 10 OFFSET 20;
 
-Create complex SQL using power of SQL::Abstract::More (SQL::Abstract::More original usage).
+SQL::Abstract::More original usage(as first argument, use hash ref instead of teble name):
 
  $teng->search_by_sql_abstract_more(
    {
      -columns  => ['x', 'y', 'min(age) as min_age', 'max(age) as max_age'],
-     -from     => ['table1|t1',
+     -from     => [-join,
+                   'table1|t1',
                    't1.id=t2.id'
                    'table2|t2',
                    't1.id=t3.table1_id,t2.id=t3.table2_id',
@@ -185,9 +189,9 @@ Create complex SQL using power of SQL::Abstract::More (SQL::Abstract::More origi
    },
  );
 
-Using pager
+Using pager.
 
-Compatible usage.
+Compatible usage:
 
  $teng->search_by_sql_abstract_more(
    'table', {
@@ -202,7 +206,7 @@ Compatible usage.
    },
  );
 
-Originaly usage.
+Originaly usage:
 
  $teng->search_by_sql_abstract_more(
    {
@@ -246,7 +250,7 @@ If you want to use SearchBySQLAbstractMore::Pager instead of SearchBySQLAbstract
 pass 'Pager' as arugment.
 
  $your_class->install_sql_abstract_more(pager => 'Pager');
- $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows'); # as same as no argument
+ $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows'); # as same as no pager => 1
 
 =head1 AUTHOR
 
