@@ -101,14 +101,25 @@ sub replace_teng_search {
 sub install_sql_abstract_more {
     my ($self, %opt) = @_;
     my $class = ref $self ? ref $self : $self;
-    Teng::Plugin::SearchBySQLAbstractMore->replace_teng_search;
+    if (not exists $opt{replace} or $opt{replace}) {
+        Teng::Plugin::SearchBySQLAbstractMore->replace_teng_search;
+    }
     if (my $pager_plugin = $opt{pager}) {
-        if ($pager_plugin ne '1') {
-            $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
+        if ($pager_plugin eq '1') {
+            $class->load_plugin('SearchBySQLAbstractMore::Pager',
                                 {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
         } else {
-            $class->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
+            if (lc($pager_plugin) eq 'pager') {
+                $pager_plugin = 'Pager';
+            } elsif (lc($pager_plugin) eq 'mysql_pager') {
+                $pager_plugin = 'Pager::MySQLFoundRows';
+            }
+            $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
                                 {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+            #} elsif (ref $self and $self->dbh->{Driver}->{Name} eq 'mysql') {
+            #    # object is passed and driver is mysql
+            #    $class->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
+            #                        {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
         }
     }
 }
@@ -131,6 +142,30 @@ our $VERSION = '0.01';
 
 
 =head1 SYNOPSIS
+
+  package MyApp::DB;
+  use parent qw/Teng/;
+  __PACKAGE__->load_plugin('SearchBySQLAbstractMore');
+
+  package main;
+  my $db = MyApp::DB->new(dbh => $dbh);
+  my $page = $c->req->param('page') || 1;
+  my ($rows, $pager) = $db->search_by_sql_abstract_more('user' => {type => 3}, {page => $page, rows => 5});
+  
+If you want to replace Teng search
+
+  package MyApp::DB;
+  use parent qw/Teng/;
+  __PACKAGE__->load_plugin('SearchBySQLAbstractMore');
+  __PACKAGE__->install_sql_abstract_more;
+  # now, search method is replaced by search_by_sql_abstract_more
+
+If you want to load pager at the same time
+
+  # search_with_pager from SearchBySQLAbstractMore::Pager
+  __PACKAGE__->install_sql_abstract_more(pager => 'Pager');
+  # search_with_pager from SearchBySQLAbstractMore::Pager::MySQLFoundRows if dbh is used DBD::mysql
+  __PACKAGE__->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');
 
 Create complex SQL using SQL::Abstract::More.
 
@@ -240,17 +275,34 @@ and you want to use same usage with SQL::Abstract::More.
 
 =head2 install_sql_abstract_more
 
+ $your_class->install_sql_abstract_more;
+ $your_class->install_sql_abstract_more(replace => 1); # same as the above
+ 
+ # use pager
  $your_class->install_sql_abstract_more(pager => 1);
+ $your_class->install_sql_abstract_more(pager => 'mysql_pager');
 
-It call replace_teng_search and loads SearchBySQLAbstractMore::Pager::SQLFoundRows with alias option.
-C<search> and C<search_with_pager> are replaced with them.
+It call replace_teng_search if replace option is not passed or replace option is true and
+loads pager plugin with alias option. C<search> and C<search_with_pager> are installed.
 
-As first arugument, pager plugin name can be specified.
-If you want to use SearchBySQLAbstractMore::Pager instead of SearchBySQLAbstractMore::Pager::SQLFoundRows,
-pass 'Pager' as arugment.
+This option can take the following options.
 
- $your_class->install_sql_abstract_more(pager => 'Pager');
- $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows'); # as same as no pager => 1
+=head3 replace
+
+If you don't want to replace Teng's search method, pass this option with false.
+
+ $your_class->install_sql_abstract_more(replace => 0);
+
+=head3 pager
+
+Pass pager plugin name or 1.
+
+ $your_class->install_sql_abstract_more(pager => 1);       # load SearchBySQLAbstractMore::Pager
+ $your_class->install_sql_abstract_more(pager => 'Pager'); # same as the above
+ $your_class->install_sql_abstract_more(pager => 'pager'); # same as the above
+
+ $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');# load SearchBySQLAbstractMore::Pager::MySQLFoundRows
+ $your_class->install_sql_abstract_more(pager => 'mysql_pager');          # same as the above
 
 =head1 AUTHOR
 
