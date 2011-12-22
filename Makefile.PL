@@ -7,6 +7,9 @@ license  'perl';
 
 build_requires 'Test::More';
 
+author_tests('xt');
+tests 't/*.t t/*/*.t';
+
 auto_install;
 
 WriteAll;
