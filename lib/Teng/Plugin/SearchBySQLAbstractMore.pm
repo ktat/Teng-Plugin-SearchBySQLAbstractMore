@@ -164,7 +164,7 @@ If you want to load pager at the same time
 
   # search_with_pager from SearchBySQLAbstractMore::Pager
   __PACKAGE__->install_sql_abstract_more(pager => 'Pager');
-  # search_with_pager from SearchBySQLAbstractMore::Pager::MySQLFoundRows if dbh is used DBD::mysql
+  # search_with_pager from SearchBySQLAbstractMore::Pager::MySQLFoundRows
   __PACKAGE__->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');
 
 Create complex SQL using SQL::Abstract::More.
@@ -222,6 +222,7 @@ SQL::Abstract::More original usage(as first argument, use hash ref instead of te
       },
    },
  );
+ # SQL is as same as the avobe code.
 
 Using pager.
 
