@@ -107,7 +107,7 @@ L<http://search.cpan.org/dist/Teng-Plugin-SearchBySQLAbstractMore/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2011 Ktat.
+Copyright 2012 Ktat.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
@@ -118,4 +118,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of Teng::Plugin::SearchBySQLAbstractMore::Pager
+1; # End of Teng::Plugin::SearchBySQLAbstractMore::Pager::MySQLFoundRows
