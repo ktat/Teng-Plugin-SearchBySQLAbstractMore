@@ -16,7 +16,7 @@ sub search_by_sql_abstract_more_with_pager {
 
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
 
-    my ($sql, @binds) = SQL::Abstract::More->new->select(%$args);
+    my ($sql, @binds) = Teng::Plugin::SearchBySQLAbstractMore->_sql_abstract_more->select(%$args);
     $sql =~s{^\s*SELECT }{SELECT SQL_CALC_FOUND_ROWS }i;
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;

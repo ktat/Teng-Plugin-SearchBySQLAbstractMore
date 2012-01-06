@@ -9,12 +9,18 @@ use Data::Page;
 use SQL::Abstract::More;
 
 our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pager install_sql_abstract_more/;
+my $sql_abstract_more;
+my %new_option;
+
+sub new_option { shift; %new_option = @_ }
+
+sub _sql_abstract_more { $sql_abstract_more ||= SQL::Abstract::More->new(%new_option) }
 
 sub search_by_sql_abstract_more {
     my ($self, $table_name, $where, $_opt) = @_;
     ($table_name, my $args) = _arrange_args($table_name, $where, $_opt);
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
-    my ($sql, @binds) = SQL::Abstract::More->new->select(%$args);
+    my ($sql, @binds) = __PACKAGE__->_sql_abstract_more->select(%$args);
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
     my $itr = Teng::Iterator->new(
@@ -101,9 +107,15 @@ sub replace_teng_search {
 sub install_sql_abstract_more {
     my ($self, %opt) = @_;
     my $class = ref $self ? ref $self : $self;
-    if (not exists $opt{replace} or $opt{replace}) {
+
+    if (exists $opt{alias} and $opt{alias}) {
+        $opt{alias} = 'search' if $opt{alias} eq '1';
+        no strict 'refs';
+        *{$class . '::' . $opt{alias}} = *{__PACKAGE__ . '::search_by_sql_abstract_more'};
+    } elsif (not exists $opt{replace} or $opt{replace}) {
         Teng::Plugin::SearchBySQLAbstractMore->replace_teng_search;
     }
+
     if (my $pager_plugin = $opt{pager}) {
         if ($pager_plugin eq '1') {
             $class->load_plugin('SearchBySQLAbstractMore::Pager',
@@ -149,6 +161,7 @@ our $VERSION = '0.03';
   package MyApp::DB;
   use parent qw/Teng/;
   __PACKAGE__->load_plugin('SearchBySQLAbstractMore');
+  SearchBySQLAbstractMore->new_option(sql_dialect => 'Oracle'); # If you want to pass SQL::Abstract::More new options
 
   package main;
   my $db = MyApp::DB->new(dbh => $dbh);
@@ -269,6 +282,13 @@ see SYNOPSIS.
 
 =head1 CLASS METHOD
 
+=head2 new_option
+
+  Teng::Plugin::SearchBySQLAbstractMore->new_option(sql_dialect => 'Oracle');
+
+This method's arguments are passded to SQL::Abstract::More->new().
+see L<SQL::Abstract::More> new options.
+
 =head2 replace_teng_search
 
 If you want to replace C<search> method of original Teng, call this.
@@ -282,6 +302,9 @@ and you want to use same usage with SQL::Abstract::More.
 
  $your_class->install_sql_abstract_more;
  $your_class->install_sql_abstract_more(replace => 1); # same as the above
+ 
+ $your_class->install_sql_abstract_more(alias => 1); # YourClass::search is defined instead of sql_abstract_more
+ $your_class->install_sql_abstract_more(alias => 'complex_search'); # YourClass::complex_search is defined instead of sql_abstract_more;
  
  # use pager
  $your_class->install_sql_abstract_more(pager => 1);

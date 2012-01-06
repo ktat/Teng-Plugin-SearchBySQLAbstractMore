@@ -10,6 +10,10 @@ t/00-load.t
 t/Utils.pm
 t/boilerplate.t
 t/install_method.t
+t/install_method_alias.t
+t/install_method_replace_0.t
+t/install_method_replace_1.t
+t/new_option.t
 t/lib/Mock/Basic.pm
 t/lib/Mock/Basic/Schema.pm
 t/lib/Mock/BasicBindColumn.pm
