@@ -1,6 +1,7 @@
 use t::Utils;
 use Mock::Basic;
 use Test::More;
+use version;
 
 Mock::Basic->load_plugin('SearchBySQLAbstractMore');
 Mock::Basic->install_sql_abstract_more(pager => 1);
@@ -86,9 +87,12 @@ subtest 'search with non-exist table' => sub {
 };
 
 subtest 'search with select' => sub {
-    my $r = $db->single('mock_basic', {}, { columns => ['name', \'id * 2 as double_id'], order_by => ['id'] });
-    is $r->name, 'perl';
-    is $r->get_column('double_id'), 2;
+    SKIP: {
+        skip "Teng version <= 0.14_1", 2  if Teng->VERSION lt 0.14_01;
+        my $r = $db->single('mock_basic', {}, { columns => ['name', \'id * 2 as double_id'], order_by => ['id'] });
+        is $r->name, 'perl';
+        is $r->get_column('double_id'), 2;
+    }
 };
 
 done_testing;

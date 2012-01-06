@@ -1,4 +1,5 @@
-package xt::Utils::mysql;
+package
+ xt::Utils::mysql;
 
 use strict;
 use warnings;

@@ -1,5 +1,8 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.02    2012/01/06 13:10
+	skip some test when Teng version < 0.14_01
+
 0.01    2012/01/06 00:03
         First version.
 

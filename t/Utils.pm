@@ -1,4 +1,5 @@
-package t::Utils;
+package
+ t::Utils;
 use strict;
 use warnings;
 use utf8;

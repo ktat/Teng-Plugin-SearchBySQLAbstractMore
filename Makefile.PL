@@ -10,6 +10,14 @@ build_requires 'Test::More';
 author_tests('xt');
 tests 't/*.t t/*/*.t';
 
+resources
+  bugtracker => 'https://github.com/ktat/Teng-Plugin-SearchBySQLAbstractMore/issues',
+  repository => {
+      url  => 'https://github.com/ktat/Teng-Plugin-SearchBySQLAbstractMore.git',
+      web  => 'https://github.com/ktat/Teng-Plugin-SearchBySQLAbstractMore',
+      type => 'git',
+  };
+
 auto_install;
 
 WriteAll;
