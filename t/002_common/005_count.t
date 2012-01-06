@@ -2,7 +2,7 @@ use t::Utils;
 use Mock::Basic;
 use Test::More;
 Mock::Basic->load_plugin('SearchBySQLAbstractMore');
-Mock::Basic->install_sql_abstract_more(pager => 'pager');
+Mock::Basic->install_sql_abstract_more(pager => 'simple');
 
 my $dbh = t::Utils->setup_dbh;
 my $db = Mock::Basic->new({dbh => $dbh});

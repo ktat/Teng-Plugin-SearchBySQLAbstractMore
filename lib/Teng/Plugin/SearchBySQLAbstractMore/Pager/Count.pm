@@ -1,11 +1,11 @@
-package Teng::Plugin::SearchBySQLAbstractMore::Pager;
+package Teng::Plugin::SearchBySQLAbstractMore::Pager::Count;
 
 use strict;
 use warnings;
 use utf8;
 use Carp ();
 use Teng::Iterator;
-use Data::Page::NoTotalEntries;
+use Data::Page;
 use Teng::Plugin::SearchBySQLAbstractMore ();
 
 our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
@@ -15,41 +15,43 @@ sub search_by_sql_abstract_more_with_pager {
     ($table_name, my($args, $rows, $page)) = Teng::Plugin::SearchBySQLAbstractMore::_arrange_args($table_name, $where, $_opt);
 
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
-    $args->{-limit} += 1;
+
     my ($sql, @binds) = SQL::Abstract::More->new->select(%$args);
 
-    my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
-    $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
+    $args->{-columns} = [ 'count(*)' ];
+    delete @{$args}{qw/-offset -limit/};
 
-    my $ret = [ Teng::Iterator->new(
-                                    teng       => $self,
-                                    sth        => $sth,
-                                    sql        => $sql,
-                                    row_class  => $self->schema->get_row_class($table_name),
-                                    table_name => $table_name,
-                                    suppress_object_creation => $self->suppress_row_objects,
-                                   )->all];
-
-    my $has_next = ( $rows + 1 == scalar(@$ret) ) ? 1 : 0;
-    if ($has_next) {
-        pop @$ret;
-    }
-
-    my $pager = Data::Page::NoTotalEntries->new
-        (
-         entries_per_page     => $rows,
-         current_page         => $page,
-         has_next             => $has_next,
-         entries_on_this_page => scalar(@$ret),
-        );
-    return ($ret, $pager);
+    my ($count_sql, @count_binds) = SQL::Abstract::More->new->select(%$args);
+    my $count_sth = $self->dbh->prepare($count_sql) or Carp::croak $self->dbh->errstr;
+    my $sth       = $self->dbh->prepare($sql)       or Carp::croak $self->dbh->errstr;
+    my ($total_entries, $itr);
+    do {
+	my $txn_scope = $self->txn_scope;
+	$count_sth->execute(@count_binds) or Carp::croak $self->dbh->errstr;
+	$sth->execute(@binds)             or Carp::croak $self->dbh->errstr;
+	($total_entries) = $count_sth->fetchrow_array();
+	$itr = Teng::Iterator->new(
+				   teng             => $self,
+				   sth              => $sth,
+				   sql              => $sql,
+				   row_class        => $self->schema->get_row_class($table_name),
+				   table_name       => $table_name,
+				   suppress_object_creation => $self->suppress_row_objects,
+				  );
+	$txn_scope->commit;
+    };
+    my $pager = Data::Page->new();
+    $pager->entries_per_page($rows);
+    $pager->current_page($page);
+    $pager->total_entries($total_entries);
+    return ([$itr->all], $pager);
 }
 
 =pod
 
 =head1 NAME
 
-Teng::Plugin::SearchBySQLAbstractMore::Pager - pager plugin using SQL::AbstractMore as Query Builder for Teng
+Teng::Plugin::SearchBySQLAbstractMore::Pager::Count - pager plugin using SQL::AbstractMore. count total entry by count(*)
 
 =head1 SYNOPSIS
 
@@ -117,4 +119,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of Teng::Plugin::SearchBySQLAbstractMore::Pager
+1; # End of Teng::Plugin::SearchBySQLAbstractMore::Pager::Count

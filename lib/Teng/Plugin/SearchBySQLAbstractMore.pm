@@ -109,10 +109,13 @@ sub install_sql_abstract_more {
             $class->load_plugin('SearchBySQLAbstractMore::Pager',
                                 {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
         } else {
-            if (lc($pager_plugin) eq 'pager') {
+            my $pager_plugin_name = lc $pager_plugin;
+            if ($pager_plugin_name eq 'simple') {
                 $pager_plugin = 'Pager';
-            } elsif (lc($pager_plugin) eq 'mysql_pager') {
+            } elsif ($pager_plugin_name eq 'mysql_found_rows') {
                 $pager_plugin = 'Pager::MySQLFoundRows';
+            } elsif ($pager_plugin_name eq 'count') {
+                $pager_plugin = 'Pager::Count';
             }
             $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
                                 {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
@@ -134,11 +137,11 @@ Teng::Plugin::SearchBySQLAbstractMore - use SQL::AbstractMore as Query Builder f
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -166,6 +169,8 @@ If you want to load pager at the same time
   __PACKAGE__->install_sql_abstract_more(pager => 'Pager');
   # search_with_pager from SearchBySQLAbstractMore::Pager::MySQLFoundRows
   __PACKAGE__->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');
+  # search_with_pager from SearchBySQLAbstractMore::Pager::Count
+  __PACKAGE__->install_sql_abstract_more(pager => 'Pager::Count');
 
 Create complex SQL using SQL::Abstract::More.
 
@@ -280,7 +285,8 @@ and you want to use same usage with SQL::Abstract::More.
  
  # use pager
  $your_class->install_sql_abstract_more(pager => 1);
- $your_class->install_sql_abstract_more(pager => 'mysql_pager');
+ $your_class->install_sql_abstract_more(pager => 'mysql_found_rows');
+ $your_class->install_sql_abstract_more(pager => 'count');
 
 It call replace_teng_search if replace option is not passed or replace option is true and
 loads pager plugin with alias option. C<search> and C<search_with_pager> are installed.
@@ -299,10 +305,13 @@ Pass pager plugin name or 1.
 
  $your_class->install_sql_abstract_more(pager => 1);       # load SearchBySQLAbstractMore::Pager
  $your_class->install_sql_abstract_more(pager => 'Pager'); # same as the above
- $your_class->install_sql_abstract_more(pager => 'pager'); # same as the above
+ $your_class->install_sql_abstract_more(pager => 'simple'); # same as the above
 
  $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');# load SearchBySQLAbstractMore::Pager::MySQLFoundRows
- $your_class->install_sql_abstract_more(pager => 'mysql_pager');          # same as the above
+ $your_class->install_sql_abstract_more(pager => 'mysql_found_rows');          # same as the above
+
+ $your_class->install_sql_abstract_more(pager => 'Pager::Count'); # load SearchBySQLAbstractMore::Pager::Count
+ $your_class->install_sql_abstract_more(pager => 'count');  # same as the above
 
 =head1 AUTHOR
 

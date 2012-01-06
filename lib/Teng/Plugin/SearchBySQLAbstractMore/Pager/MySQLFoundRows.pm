@@ -41,16 +41,7 @@ sub search_by_sql_abstract_more_with_pager {
 
 =head1 NAME
 
-Teng::Plugin::SearchBySQLAbstractMore::Pager::MySQLFoundRows - use SQL::AbstractMore as Query Builder for Teng
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
+Teng::Plugin::SearchBySQLAbstractMore::Pager::MySQLFoundRows - pager plugin using SQL::AbstractMore. count total entry by MySQL FOUND_ROWS()
 
 =head1 SYNOPSIS
 
