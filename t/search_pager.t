@@ -1,3 +1,5 @@
+use strict;
+use warnings;
 use t::Utils;
 use Mock::Basic;
 use Test::More;

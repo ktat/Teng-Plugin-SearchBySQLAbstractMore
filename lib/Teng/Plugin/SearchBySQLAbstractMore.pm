@@ -8,19 +8,39 @@ use Teng::Iterator;
 use Data::Page;
 use SQL::Abstract::More;
 
-our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pager install_sql_abstract_more/;
-my $sql_abstract_more;
+our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pager install_sql_abstract_more sql_abstract_more_object sql_abstract_more_new_option sql_abstract_more_instance/;
+my %sql_abstract_more;
 my %new_option;
 
-sub new_option { shift; %new_option = @_ }
+sub import {
+    my ($class) = @_;
+    my ($caller) = caller(0);
+    no strict 'refs';
+    *{$caller . '::install_sql_abstract_more'}    = \&install_sql_abstract_more;
+    *{$caller . '::sql_abstract_more_new_option'} = \&install_sql_abstract_more_new_option;
+}
 
-sub _sql_abstract_more { $sql_abstract_more ||= SQL::Abstract::More->new(%new_option) }
+sub _init {
+    no strict 'refs';
+    my $class = shift;
+    *{$class . '::sql_abstract_more_instance'} = \&sql_abstract_more_instance
+}
+
+sub sql_abstract_more_new_option {
+    my $class = ref($_[0]) ? ref($_[0]) : shift;
+    $new_option{$class} = {@_};
+}
+
+sub sql_abstract_more_instance {
+    my $class = ref($_[0]) ? ref($_[0]) : shift;
+    $sql_abstract_more{$class} ||= SQL::Abstract::More->new(%{$new_option{$class}});
+}
 
 sub search_by_sql_abstract_more {
     my ($self, $table_name, $where, $_opt) = @_;
     ($table_name, my $args) = _arrange_args($table_name, $where, $_opt);
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
-    my ($sql, @binds) = __PACKAGE__->_sql_abstract_more->select(%$args);
+    my ($sql, @binds) = $self->sql_abstract_more_instance->select(%$args);
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
     my $itr = Teng::Iterator->new(
@@ -107,19 +127,21 @@ sub replace_teng_search {
 sub install_sql_abstract_more {
     my ($self, %opt) = @_;
     my $class = ref $self ? ref $self : $self;
-
-    if (exists $opt{alias} and $opt{alias}) {
-        $opt{alias} = 'search' if $opt{alias} eq '1';
-        no strict 'refs';
-        *{$class . '::' . $opt{alias}} = *{__PACKAGE__ . '::search_by_sql_abstract_more'};
-    } elsif (not exists $opt{replace} or $opt{replace}) {
+    my $alias = 'search';
+    if (exists $opt{replace} and $opt{replace}) {
         Teng::Plugin::SearchBySQLAbstractMore->replace_teng_search;
+    } else {
+        $alias = $opt{alias} || 'search';
+        $alias = 'search' if $alias eq '1';
+        $class->load_plugin('SearchBySQLAbstractMore',
+                            {alias => {search_by_sql_abstract_more => $alias}});
     }
 
     if (my $pager_plugin = $opt{pager}) {
+        $alias = $opt{pager_alias} ? $opt{pager_alias} : $alias . '_with_pager';
         if ($pager_plugin eq '1') {
             $class->load_plugin('SearchBySQLAbstractMore::Pager',
-                                {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+                                {alias => {search_by_sql_abstract_more_with_pager => $alias}});
         } else {
             my $pager_plugin_name = lc $pager_plugin;
             if ($pager_plugin_name eq 'simple') {
@@ -130,7 +152,7 @@ sub install_sql_abstract_more {
                 $pager_plugin = 'Pager::Count';
             }
             $class->load_plugin('SearchBySQLAbstractMore::' . $pager_plugin,
-                                {alias => {search_by_sql_abstract_more_with_pager => 'search_with_pager'}});
+                                {alias => {search_by_sql_abstract_more_with_pager => $alias}});
             #} elsif (ref $self and $self->dbh->{Driver}->{Name} eq 'mysql') {
             #    # object is passed and driver is mysql
             #    $class->load_plugin('SearchBySQLAbstractMore::Pager::MySQLFoundRows',
@@ -161,7 +183,7 @@ our $VERSION = '0.04';
   package MyApp::DB;
   use parent qw/Teng/;
   __PACKAGE__->load_plugin('SearchBySQLAbstractMore');
-  SearchBySQLAbstractMore->new_option(sql_dialect => 'Oracle'); # If you want to pass SQL::Abstract::More new options
+  __PACAKGE__->sql_abstract_more_new_option(sql_dialect => 'Oracle'); # If you want to pass SQL::Abstract::More new options
 
   package main;
   my $db = MyApp::DB->new(dbh => $dbh);
@@ -282,9 +304,15 @@ see SYNOPSIS.
 
 =head1 CLASS METHOD
 
-=head2 new_option
+=head2 sql_abstract_more_instance
 
-  Teng::Plugin::SearchBySQLAbstractMore->new_option(sql_dialect => 'Oracle');
+ YourClass->sql_abstract_more_instance;
+
+return SQL::Abstract::More object.
+
+=head2 sql_abstract_more_new_option
+
+  YourClass->sql_abstract_more_new_option(sql_dialect => 'Oracle');
 
 This method's arguments are passded to SQL::Abstract::More->new().
 see L<SQL::Abstract::More> new options.
@@ -300,41 +328,84 @@ and you want to use same usage with SQL::Abstract::More.
 
 =head2 install_sql_abstract_more
 
- $your_class->install_sql_abstract_more;
- $your_class->install_sql_abstract_more(replace => 1); # same as the above
+ package YourClass;
+ use Teng::Plugin::SearchBySQLAbstract::More; # no need to use ->load_plugin();
  
- $your_class->install_sql_abstract_more(alias => 1); # YourClass::search is defined instead of sql_abstract_more
- $your_class->install_sql_abstract_more(alias => 'complex_search'); # YourClass::complex_search is defined instead of sql_abstract_more;
+ YourClass->install_sql_abstract_more; # search_sql_abstract_more is defined as YourClass::search
+ YourClass->install_sql_abstract_more(alias => 1); # same as the above
+
+ YourClass->install_sql_abstract_more(replace => 1); # Teng::Search is replaced by search_sql_abstract_more
  
- # use pager
- $your_class->install_sql_abstract_more(pager => 1);
- $your_class->install_sql_abstract_more(pager => 'mysql_found_rows');
- $your_class->install_sql_abstract_more(pager => 'count');
+ YourClass->install_sql_abstract_more(alias => 'complex_search');
+ # sql_abstract_more is defined as YourClass::complex_search
+ 
+ YourClass->install_sql_abstract_more(alias => 'complex_search', pager => 1);
+ # sql_abstract_more is defined as YourClass::complex_search
+ # sql_abstract_more_pager is defined as YourClass::complex_search_with_pager
+ 
+ YourClass->install_sql_abstract_more(alias => 'complex_search', pager => 1, pager_alias => 'complex_search_paged');
+ # sql_abstract_more is defined as YourClass::complex_search
+ # sql_abstract_more_pager is defined as YourClass::complex_search_paged
+ 
+ # use different pager
+ YourClass->install_sql_abstract_more(pager => 1); # or pager => 'simple' / 'Pager'
+ YourClass->install_sql_abstract_more(pager => 'mysql_found_rows'); # or pager => 'Pager::MySQL::FoundRows'
+ YourClass->install_sql_abstract_more(pager => 'count'); # or pager => 'Pager::Count'
 
-It call replace_teng_search if replace option is not passed or replace option is true and
-loads pager plugin with alias option. C<search> and C<search_with_pager> are installed.
+It call replace_teng_search if replace option is passed and it is true
+and loads pager plugin with alias option if pager option is true.
+C<search> and C<search_with_pager> are installed to your class.
 
-This option can take the following options.
+This method can take the following options.
 
 =head3 replace
 
-If you don't want to replace Teng's search method, pass this option with false.
+If you want to replace Teng's search method, pass this option.
 
- $your_class->install_sql_abstract_more(replace => 0);
+ YourClass->install_sql_abstract_more(replace => 1);
+
+=head3 alias
+
+ YourClass->install_sql_abstract_more(alias => 'complex_search');
+ YourClass->install_sql_abstract_more(pager => 'Pager', alias => 'complex_search');
+
+This is equals to:
+
+ YourClass->load_plugin('Teng::Plugin::SearchBySQLAbstractMore', {
+    alias => 'search_by_sql_abstract_more' => 'complex_search',
+ });
+ YourClass->load_plugin('Teng::Plugin::SearchBySQLAbstractMore::Pager', {
+    alias => 'search_by_sql_abstract_more_with_pager' => 'complex_search_with_pager',
+ });
+
+=head3 pager_alias
+
+If you want to use different alias for pager search.
+
+ YourClass->install_sql_abstract_more(pager => 'Pager', pager_alias => 'complex_search_with_pager');
+
+This is equals to:
+
+ YourClass->load_plugin('Teng::Plugin::SearchBySQLAbstractMore', {
+    alias => 'search_by_sql_abstract_more' => 'search',
+ });
+ YourClass->load_plugin('Teng::Plugin::SearchBySQLAbstractMore::Pager', {
+    alias => 'search_by_sql_abstract_more_with_pager' => 'complex_search_with_pager',
+ });
 
 =head3 pager
 
 Pass pager plugin name or 1.
 
- $your_class->install_sql_abstract_more(pager => 1);       # load SearchBySQLAbstractMore::Pager
- $your_class->install_sql_abstract_more(pager => 'Pager'); # same as the above
- $your_class->install_sql_abstract_more(pager => 'simple'); # same as the above
+ YourClass->install_sql_abstract_more(pager => 1);       # load SearchBySQLAbstractMore::Pager
+ YourClass->install_sql_abstract_more(pager => 'Pager'); # same as the above
+ YourClass->install_sql_abstract_more(pager => 'simple'); # same as the above
 
- $your_class->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');# load SearchBySQLAbstractMore::Pager::MySQLFoundRows
- $your_class->install_sql_abstract_more(pager => 'mysql_found_rows');          # same as the above
+ YourClass->install_sql_abstract_more(pager => 'Pager::MySQLFoundRows');# load SearchBySQLAbstractMore::Pager::MySQLFoundRows
+ YourClass->install_sql_abstract_more(pager => 'mysql_found_rows');          # same as the above
 
- $your_class->install_sql_abstract_more(pager => 'Pager::Count'); # load SearchBySQLAbstractMore::Pager::Count
- $your_class->install_sql_abstract_more(pager => 'count');  # same as the above
+ YourClass->install_sql_abstract_more(pager => 'Pager::Count'); # load SearchBySQLAbstractMore::Pager::Count
+ YourClass->install_sql_abstract_more(pager => 'count');  # same as the above
 
 =head1 AUTHOR
 

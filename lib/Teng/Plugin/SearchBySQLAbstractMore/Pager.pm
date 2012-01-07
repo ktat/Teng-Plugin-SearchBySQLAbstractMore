@@ -10,13 +10,17 @@ use Teng::Plugin::SearchBySQLAbstractMore ();
 
 our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
 
+sub init {
+    $_[1]->Teng::Plugin::SearchBySQLAbstractMore::_init();
+}
+
 sub search_by_sql_abstract_more_with_pager {
     my ($self, $table_name, $where, $_opt) = @_;
     ($table_name, my($args, $rows, $page)) = Teng::Plugin::SearchBySQLAbstractMore::_arrange_args($table_name, $where, $_opt);
 
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
     $args->{-limit} += 1;
-    my ($sql, @binds) = Teng::Plugin::SearchBySQLAbstractMore->_sql_abstract_more->select(%$args);
+    my ($sql, @binds) = $self->sql_abstract_more_instance->select(%$args);
 
     my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
     $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
