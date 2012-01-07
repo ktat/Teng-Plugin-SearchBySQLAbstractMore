@@ -149,7 +149,7 @@ Teng::Plugin::SearchBySQLAbstractMore - use SQL::AbstractMore as Query Builder f
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
