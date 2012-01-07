@@ -14,6 +14,10 @@ sub init {
     $_[1]->Teng::Plugin::SearchBySQLAbstractMore::_init();
 }
 
+# work around
+push @EXPORT, qw/sql_abstract_more_instance/;
+*sql_abstract_more_instance = \&Teng::Plugin::SearchBySQLAbstractMore::sql_abstract_more_instance;
+
 sub search_by_sql_abstract_more_with_pager {
     my ($self, $table_name, $where, $_opt) = @_;
     ($table_name, my($args, $rows, $page)) = Teng::Plugin::SearchBySQLAbstractMore::_arrange_args($table_name, $where, $_opt);
