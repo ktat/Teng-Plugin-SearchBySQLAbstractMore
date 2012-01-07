@@ -5,7 +5,15 @@ all_from 'lib/Teng/Plugin/SearchBySQLAbstractMore.pm';
 author   q{Ktat <ktat@cpan.org>};
 license  'perl';
 
-build_requires 'Test::More';
+requires
+    'Teng'                       => 0,
+    'SQL::Abstract::More'        => 0,
+    'Data::Page'                 => 0,
+    ;
+
+build_requires
+    'Test::More' => 0,
+    ;
 
 author_tests('xt');
 tests 't/*.t t/*/*.t';
