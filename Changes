@@ -1,5 +1,11 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.05    2012/01/07 17:20
+	*NOTE THAT* change install_sql_abstract_more.
+	            now, alias is default. replace is optional.
+	*NOTE THAT* Teng::Plugin::SearchBySQLAbstractMore->new_option is now YourClass->sql_abstract_more_new_option.
+	fix bug of caching SQL::Abstract::More object .
+
 0.04    2012/01/07 13:56
 	fix Makefile.PL.
 
