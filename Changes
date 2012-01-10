@@ -1,5 +1,9 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.06	2012/01/11 0045:
+	improve Pager::Count
+	add Pager::CountOrMySQLFoundRows
+
 0.05    2012/01/07 17:20
 	*NOTE THAT* change install_sql_abstract_more.
 	            now, alias is default. replace is optional.
