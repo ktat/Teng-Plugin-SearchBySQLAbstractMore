@@ -6,7 +6,7 @@ lib/Teng/Plugin/SearchBySQLAbstractMore.pm
 lib/Teng/Plugin/SearchBySQLAbstractMore/Pager.pm
 lib/Teng/Plugin/SearchBySQLAbstractMore/Pager/MySQLFoundRows.pm
 lib/Teng/Plugin/SearchBySQLAbstractMore/Pager/Count.pm
-lib/Teng/Plugin/SearchBySQLAbstractMore/Pager/CountOrySQLFoundRows.pm
+lib/Teng/Plugin/SearchBySQLAbstractMore/Pager/CountOrMySQLFoundRows.pm
 t/00-load.t
 t/Utils.pm
 t/boilerplate.t
@@ -35,6 +35,7 @@ t/002_common/005_count.t
 t/002_common/006_single.t
 t/002_common/007_search.t
 xt/001_basic/025_pager_count.t
+xt/001_basic/025_pager.t
 xt/Utils/mysql.pm
 xt/install_method-mysql.t
 xt/search_pager_mysql_foundrows.t

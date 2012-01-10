@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use t::Utils;
+use t::Utils:mysql;
 use Mock::Basic;
 use Test::More;
 
