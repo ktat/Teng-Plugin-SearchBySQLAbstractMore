@@ -8,7 +8,8 @@ use Teng::Iterator;
 use Data::Page;
 use SQL::Abstract::More;
 
-our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pager install_sql_abstract_more sql_abstract_more_object sql_abstract_more_new_option sql_abstract_more_instance/;
+our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pager install_sql_abstract_more
+                 sql_abstract_more_object sql_abstract_more_new_option sql_abstract_more_instance/;
 my %sql_abstract_more;
 my %new_option;
 
