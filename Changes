@@ -1,5 +1,8 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.07	2012/02/04 12:08
+	use _execute method of Teng. error message is improved.
+
 0.06	2012/01/11 0045:
 	improve Pager::Count
 	add Pager::CountOrMySQLFoundRows

@@ -27,8 +27,7 @@ sub search_by_sql_abstract_more_with_pager {
 
     my ($sql, @binds) = $self->sql_abstract_more_instance->select(%$args);
     $sql =~s{^\s*SELECT }{SELECT SQL_CALC_FOUND_ROWS }i;
-    my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
-    $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
+    my $sth = $self->_execute($sql, \@binds);
     my $total_entries = $self->dbh->selectrow_array(q{SELECT FOUND_ROWS()});
     my $itr = Teng::Iterator->new(
                                   teng             => $self,

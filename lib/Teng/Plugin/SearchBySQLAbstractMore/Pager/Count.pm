@@ -36,13 +36,11 @@ sub search_by_sql_abstract_more_with_pager {
     if ($args->{-having} or $args->{-group_by}) {
         $count_sql = "SELECT COUNT(*) as cnt FROM ($count_sql) AS total_count";
     }
-    my $count_sth = $self->dbh->prepare($count_sql) or Carp::croak $self->dbh->errstr;
-    my $sth       = $self->dbh->prepare($sql)       or Carp::croak $self->dbh->errstr;
     my ($total_entries, $itr);
     do {
         my $txn_scope = $self->txn_scope;
-        $count_sth->execute(@count_binds) or Carp::croak $self->dbh->errstr;
-        $sth->execute(@binds)             or Carp::croak $self->dbh->errstr;
+        my $count_sth = $self->_execute($count_sql, \@count_binds);
+        my $sth       = $self->_execute($sql,       \@binds);
         ($total_entries) = $count_sth->fetchrow_array();
         $itr = Teng::Iterator->new(
                                    teng             => $self,

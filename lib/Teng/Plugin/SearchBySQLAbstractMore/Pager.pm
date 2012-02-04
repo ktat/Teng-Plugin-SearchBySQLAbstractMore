@@ -27,9 +27,7 @@ sub search_by_sql_abstract_more_with_pager {
     $args->{-limit} += 1;
     my ($sql, @binds) = $self->sql_abstract_more_instance->select(%$args);
 
-    my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
-    $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
-
+    my $sth = $self->_execute($sql, \@binds);
     my $ret = [ Teng::Iterator->new(
                                     teng       => $self,
                                     sth        => $sth,

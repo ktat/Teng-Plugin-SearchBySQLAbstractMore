@@ -42,8 +42,8 @@ sub search_by_sql_abstract_more {
     ($table_name, my $args) = _arrange_args($table_name, $where, $_opt);
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
     my ($sql, @binds) = $self->sql_abstract_more_instance->select(%$args);
-    my $sth = $self->dbh->prepare($sql) or Carp::croak $self->dbh->errstr;
-    $sth->execute(@binds) or Carp::croak $self->dbh->errstr;
+
+    my $sth = $self->_execute($sql, \@binds);
     my $itr = Teng::Iterator->new(
                                   teng             => $self,
                                   sth              => $sth,
@@ -172,11 +172,11 @@ Teng::Plugin::SearchBySQLAbstractMore - use SQL::AbstractMore as Query Builder f
 
 =head1 VERSION
 
-Version 0.05
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 
 =head1 SYNOPSIS
