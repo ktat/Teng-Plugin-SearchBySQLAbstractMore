@@ -8,8 +8,8 @@ use Teng::Iterator;
 use Data::Page;
 use SQL::Abstract::More;
 
-our @EXPORT = qw/search_by_sql_abstract_more search_by_sql_abstract_more_with_pager install_sql_abstract_more
-                 sql_abstract_more_object sql_abstract_more_new_option sql_abstract_more_instance/;
+our @EXPORT = qw/search_by_sql_abstract_more install_sql_abstract_more
+                 sql_abstract_more_instance sql_abstract_more_new_option sql_abstract_more_instance/;
 my %sql_abstract_more;
 my %new_option;
 
@@ -64,7 +64,7 @@ sub _arrange_args {
         $table_name = ref $_opt->{-from} eq 'ARRAY' ? $_opt->{-from}->[0] eq '-join'
                     ? $_opt->{-from}->[1]           : $_opt->{-from}->[0]
                                                     : $_opt->{-from};
-        $table_name =~s{\|.+$}{};
+        $table_name =~s{(?: +)?\|.+$}{};
         %args = %$_opt;
         if ($page = delete $args{-page}) {
             $rows = delete $args{-rows};
@@ -168,7 +168,7 @@ sub install_sql_abstract_more {
 
 =head1 NAME
 
-Teng::Plugin::SearchBySQLAbstractMore - use SQL::AbstractMore as Query Builder for Teng
+Teng::Plugin::SearchBySQLAbstractMore - use L<SQL::Abstract::More> as Query Builder for Teng
 
 =head1 VERSION
 
@@ -176,7 +176,7 @@ Version 0.07
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 
 =head1 SYNOPSIS
@@ -446,6 +446,16 @@ L<http://search.cpan.org/dist/Teng-Plugin-SearchBySQLAbstractMore/>
 
 =back
 
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Teng>
+
+=item L<SQL::Abstract::More>
+
+=back
 
 =head1 ACKNOWLEDGEMENTS
 

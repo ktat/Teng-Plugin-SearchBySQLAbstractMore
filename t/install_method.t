@@ -157,9 +157,9 @@ subtest 'search original with join' => sub {
         -where => {},,
         -columns => ['a.id', 'b.name'],
         -from => [-join =>
-                  'mock_basic|a',
+                  'mock_basic | a',
                   'a.id=b.mock_basic_id',
-                  'mock_basic2|b',
+                  'mock_basic2 | b',
                  ],
         -order_by => ['a.id'],
         -page     => 2,

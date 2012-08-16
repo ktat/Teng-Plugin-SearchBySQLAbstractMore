@@ -1,5 +1,9 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.08    2012/08/16 19:54
+	fix bug: not existing/wrong method name in EXPORT
+	allow whitespace around '|' used for join
+
 0.07	2012/02/04 12:08
 	use _execute method of Teng. error message is improved.
 
