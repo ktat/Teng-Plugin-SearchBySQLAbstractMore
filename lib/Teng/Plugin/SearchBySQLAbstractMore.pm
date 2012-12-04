@@ -8,7 +8,7 @@ use Teng::Iterator;
 use Data::Page;
 use SQL::Abstract::More;
 
-our @EXPORT = qw/search_by_sql_abstract_more install_sql_abstract_more
+our @EXPORT = qw/search_by_sql_abstract_more install_sql_abstract_more create_sql_by_sql_abstract_more
                  sql_abstract_more_instance sql_abstract_more_new_option sql_abstract_more_instance/;
 my %sql_abstract_more;
 my %new_option;
@@ -35,6 +35,12 @@ sub sql_abstract_more_new_option {
 sub sql_abstract_more_instance {
     my $class = ref($_[0]) ? ref($_[0]) : shift;
     $sql_abstract_more{$class} ||= SQL::Abstract::More->new(%{$new_option{$class}});
+}
+
+sub create_sql_by_sql_abstract_more {
+    my ($self, $table_name, $where, $_opt) = @_;
+    ($table_name, my $args) = _arrange_args($table_name, $where, $_opt);
+    return $self->sql_abstract_more_instance->select(%$args);
 }
 
 sub search_by_sql_abstract_more {
@@ -297,11 +303,24 @@ Originaly usage:
    },
  );
 
+Generate SQL by SQLAbstractMore
+
+ ($sql, @binds) = $teng->create_sql_by_sql_abstract_more($table, $where, $opt);
+
+It returns SQL and bind values with same args of C<search_bys_sql_abstract_more> method.
+
 =head1 METHODS
 
 =head2 search_by_sql_abstract_more
 
 see SYNOPSIS.
+
+=head2 create_sql_by_sql_abstract_more
+
+ ($sql, @binds) = $teng->create_sql_by_sql_abstract_more($table, $where, $opt);
+
+This method returns sql satement and its bind values.
+It doesn't check table is in schema.
 
 =head1 CLASS METHOD
 
