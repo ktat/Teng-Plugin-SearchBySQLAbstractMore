@@ -34,11 +34,13 @@ t/001_basic/025_pager_count.t
 t/002_common/005_count.t
 t/002_common/006_single.t
 t/002_common/007_search.t
+t/pager_count_create_sqls.t
 xt/001_basic/025_pager_count.t
 xt/001_basic/025_pager.t
 xt/Utils/mysql.pm
 xt/install_method-mysql.t
 xt/search_pager_mysql_foundrows.t
+xt/pager_count_create_sqls_mysql.t
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AuthorTests.pm

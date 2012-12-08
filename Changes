@@ -1,5 +1,10 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.09    2012/12/08 20:09
+        add hint_columns option to Pager::Count module.
+	add order by null to count sql when using Pager::Count and db is MySQL and query has group by.
+        add create_sql_by_sql_abstract_more just to create SQL with SQL::Abstract::More.
+
 0.08    2012/08/16 19:54
 	fix bug: not existing/wrong method name in EXPORT
 	allow whitespace around '|' used for join
