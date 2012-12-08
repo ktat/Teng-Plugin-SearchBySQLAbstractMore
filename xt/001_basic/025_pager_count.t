@@ -161,4 +161,69 @@ foreach my $plugin (qw(MySQLFoundRows Count CountOrMySQLFoundRows)) {
             is $pager->last, 3, 'last page';
         };
 }
+
+subtest 'search with join_and_hint_columns' => sub {
+    my ($rows, $pager) = $db->search_by_sql_abstract_more_with_pager('mock_basic',{
+    }, {
+        -hint_columns => ['a.id'],
+        -columns => ['a.id', 'b.name'],
+        -from => [-join =>
+                  'mock_basic|a',
+                  'a.id=b.mock_basic_id',
+                  'mock_basic2|b',
+                 ],
+        -order_by => ['a.id'],
+        -page     => 1,
+        -rows     => 2,
+       });
+
+    is ref $pager, 'Data::Page';
+    is scalar @$rows, 2, 'total_entries';
+
+    my $row = $rows->[0];
+    isa_ok $row, 'Teng::Row';
+
+    is $row->id, 1;
+    is $row->name, 'perl2';
+
+    my $row2 = $rows->[1];
+    isa_ok $row2, 'Teng::Row';
+
+    is $row2->id, 2;
+    is $row2->name, 'python2';
+
+    is $pager->current_page, 1;
+    is $pager->first, 1;
+    is $pager->last, 2;
+};
+
+subtest 'search original with join_and_hint_columns' => sub {
+    my ($rows, $pager) = $db->search_by_sql_abstract_more_with_pager
+      ({
+        -where => {},
+        -hint_columns => ['a.id'],
+        -columns => ['a.id', 'b.name'],
+        -from => [-join =>
+                  'mock_basic|a',
+                  'a.id=b.mock_basic_id',
+                  'mock_basic2|b',
+                 ],
+        -order_by => ['a.id'],
+        -page     => 2,
+        -rows     => 2,
+       });
+
+    is ref $pager, 'Data::Page';
+    is scalar @$rows, 1, 'total_entries';
+
+    my $row = $rows->[0];
+    isa_ok $row, 'Teng::Row';
+
+    is $row->id, 3;
+    is $row->name, 'java2';
+
+    is $pager->first, 3;
+    is $pager->last, 3;
+};
+
 done_testing;

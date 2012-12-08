@@ -11,7 +11,6 @@ use Teng::Plugin::SearchBySQLAbstractMore::Pager::Count ();
 use Teng::Plugin::SearchBySQLAbstractMore::Pager::MySQLFoundRows ();
 
 our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
-our $VERSION = '0.06';
 
 sub init {
     $_[1]->Teng::Plugin::SearchBySQLAbstractMore::_init();
@@ -30,7 +29,7 @@ sub search_by_sql_abstract_more_with_pager {
 
     $args->{-page} = $args->{-offset} ? $args->{-offset} / $args->{-limit} + 1 : 1;
     $args->{-rows} = $args->{-limit};
-    if ($args->{-having} or $args->{-group_by}) {
+    if ($args->{-group_by}) {
         return $self->Teng::Plugin::SearchBySQLAbstractMore::Pager::MySQLFoundRows::search_by_sql_abstract_more_with_pager($args);
     } else {
         return $self->Teng::Plugin::SearchBySQLAbstractMore::Pager::Count::search_by_sql_abstract_more_with_pager($args);
@@ -45,8 +44,8 @@ Teng::Plugin::SearchBySQLAbstractMore::Pager::CountOrMySQLFoundRows - pager plug
 
 =head1 DESCRIPTION
 
-If group by or having is used, use Pager::MySQLFoundRows.
-If group by or having is not used, use Pager::Count;
+If group by is used, use Pager::MySQLFoundRows.
+If group by is not used, use Pager::Count;
 
 =head1 SYNOPSIS
 

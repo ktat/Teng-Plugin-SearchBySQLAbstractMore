@@ -9,7 +9,7 @@ use Data::Page;
 use Teng::Plugin::SearchBySQLAbstractMore ();
 
 our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
-our $VERSION = '0.06';
+
 sub init {
     $_[1]->Teng::Plugin::SearchBySQLAbstractMore::_init();
 }
@@ -20,27 +20,16 @@ push @EXPORT, qw/sql_abstract_more_instance/;
 
 sub search_by_sql_abstract_more_with_pager {
     my ($self, $table_name, $where, $_opt) = @_;
-    my $sql_abstract_more = $self->sql_abstract_more_instance;
 
     ($table_name, my($args, $rows, $page)) = Teng::Plugin::SearchBySQLAbstractMore::_arrange_args($table_name, $where, $_opt);
 
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
-    my ($sql, @binds) = $sql_abstract_more->select(%$args);
-
-    delete @{$args}{qw/-offset -limit -order_by/};
-
-    if (not $args->{-having} and not $args->{-group_by}) {
-        $args->{-columns} = ['count(*)'];
-    }
-    my ($count_sql, @count_binds) = $sql_abstract_more->select(%$args);
-    if ($args->{-having} or $args->{-group_by}) {
-        $count_sql = "SELECT COUNT(*) as cnt FROM ($count_sql) AS total_count";
-    }
+    my ($sql, $binds, $count_sql, $count_binds) = _create_sqls($self, $args);
     my ($total_entries, $itr);
     do {
         my $txn_scope = $self->txn_scope;
-        my $count_sth = $self->_execute($count_sql, \@count_binds);
-        my $sth       = $self->_execute($sql,       \@binds);
+        my $count_sth = $self->_execute($count_sql, \@$count_binds);
+        my $sth       = $self->_execute($sql,       \@$binds);
         ($total_entries) = $count_sth->fetchrow_array();
         $itr = Teng::Iterator->new(
                                    teng             => $self,
@@ -59,6 +48,30 @@ sub search_by_sql_abstract_more_with_pager {
     return ([$itr->all], $pager);
 }
 
+sub _create_sqls {
+    my ($self, $args) = @_;
+
+    my $sql_abstract_more = $self->sql_abstract_more_instance;
+    my $hint_columns = delete $args->{-hint_columns};
+    my ($sql, @binds) = $sql_abstract_more->select(%$args);
+
+    delete @{$args}{qw/-offset -limit -order_by/};
+    if ($args->{-group_by} and $self->dbh->{Driver}->{Name} eq 'mysql') {
+        $args->{-order_by}  = 'NULL';
+    }
+
+    if (not $args->{-group_by}) {
+        $args->{-columns} = ['count(*)'];
+    } elsif ($hint_columns) {
+        $args->{-columns} = $hint_columns;
+    }
+    my ($count_sql, @count_binds) = $sql_abstract_more->select(%$args);
+    if ($args->{-group_by}) {
+        $count_sql = "SELECT COUNT(*) AS cnt FROM ($count_sql) AS total_count";
+    }
+    return ($sql, \@binds, $count_sql, \@count_binds);
+}
+
 =pod
 
 =head1 NAME
@@ -69,12 +82,56 @@ Teng::Plugin::SearchBySQLAbstractMore::Pager::Count - pager plugin using SQL::Ab
 
 see Teng::Plugin::SearchBySQLAbstractMore
 
+=head1 CAUTION
+
+This solution is bad when you have many records.  You re-consider the inplementation where you want to use this module.
+If you are using MySQL, I recommend to use Pager::CountOrMySQLFoundRows or Pager::MySQLFoundRows.
+
 =head1 METHODS
 
 =head2 search_by_sql_abstract_more_with_pager
 
 C<search_by_sql_abstract_more> with paging feature.
-additional parameter can be taken, C<page> and C<rows>.
+additional parameter can be taken, C<page>, C<rows> and C<hint_columns>.
+
+=head3 hint_columns
+
+If you pass C<hint_columns>, or C<-hint_columns> as option and select using "GROUP BY", it uses thies values as select columns for calcurating total count.
+
+For example:
+
+ my ($rows, $pager) = $teng->search_by_sql_abstrat_more_with_pager
+                              ('clicks',
+                               {},
+                               {-columns  => [qw/user_id count(*) date(clicked_datetime)/],
+                                -group_by => [qw/user_id date(clicked_datetime)/],
+                                -rows     => 20,
+                                -page     => 1,
+                               }
+                             );
+
+It execute the following 2 SQLs.
+
+ SELECT COUNT(*) AS cnt FROM (SELECT user_id,DATE(clicked_datetime),COUNT(*) FROM clicks GROUP BY user_id, date(clicked_datetime)) AS total_count;
+ SELECT user_id, date(clicked_datetime), COUNT(*) FROM clicks GROUP BY user_id, date(clicked_datetime) LIMIT 20 OFFSET 0;
+
+If you pass -hint_columns option.
+
+ my ($rows, $pager) = $teng->search_by_sql_abstrat_more_with_pager
+                              ('clicks',
+                               {},
+                               {-columns      => [qw/user_id count(*) date(clicked_datetime)/],
+                                -group_by     => [qw/user_id date(clicked_datetime)/],
+                                -hint_columns => [qw/user_id/],
+                                -rows         => 20,
+                                -page         => 1,
+                               }
+                             );
+
+It execute the following 2 SQLs.
+
+ SELECT COUNT(*) AS cnt  FROM (SELECT user_id FROM clicks GROUP BY user_id, date(clicked_datetime)) AS total_count;
+ SELECT user_id,date(clicked_datetime) FROM clicks GROUP BY user_id, date(clicked_datetime) LIMIT 20 OFFSET 0;
 
 =head1 AUTHOR
 

@@ -9,7 +9,6 @@ use Data::Page::NoTotalEntries;
 use Teng::Plugin::SearchBySQLAbstractMore ();
 
 our @EXPORT = qw/search_by_sql_abstract_more_with_pager/;
-our $VERSION = '0.05';
 
 sub init {
     $_[1]->Teng::Plugin::SearchBySQLAbstractMore::_init();
