@@ -1,5 +1,9 @@
 Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
+0.10	2012/12/25 03:32
+	fix bug: search method must return array of row objects in list context (reported by dokechin).
+	fix SYNOPSIS.
+
 0.09    2012/12/08 20:09
         add hint_columns option to Pager::Count module.
 	add order by null to count sql when using Pager::Count and db is MySQL and query has group by.

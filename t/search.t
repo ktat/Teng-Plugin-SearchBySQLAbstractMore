@@ -49,6 +49,15 @@ subtest 'search' => sub {
     is $row->name, 'perl';
 };
 
+subtest 'search in list context' => sub {
+    my @rows = $db->search_by_sql_abstract_more('mock_basic',{id => 1});
+    is scalar @rows, 1;
+    isa_ok $rows[0], 'Teng::Row';
+
+    is $rows[0]->id, 1;
+    is $rows[0]->name, 'perl';
+};
+
 subtest 'search with join' => sub {
     my $itr = $db->search_by_sql_abstract_more('mock_basic', {
         'a.name' => {'like' => 'p%'},

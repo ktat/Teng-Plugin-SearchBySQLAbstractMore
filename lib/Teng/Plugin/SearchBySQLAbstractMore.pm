@@ -59,7 +59,7 @@ sub search_by_sql_abstract_more {
                                   suppress_object_creation => $self->suppress_row_objects,
                                  );
 
-    return $itr;
+    return wantarray ? $itr->all : $itr;
 }
 
 sub _arrange_args {
@@ -182,7 +182,7 @@ Version 0.07
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 
 =head1 SYNOPSIS
@@ -194,8 +194,13 @@ our $VERSION = '0.09';
 
   package main;
   my $db = MyApp::DB->new(dbh => $dbh);
+
+  my $itr  = $db->search_by_sql_abstract_more('user' => {type => 3});
+  my @rows  = $db->search_by_sql_abstract_more('user' => {type => 3}, {rows => 5});
+
+  # use pager
   my $page = $c->req->param('page') || 1;
-  my ($rows, $pager) = $db->search_by_sql_abstract_more('user' => {type => 3}, {page => $page, rows => 5});
+  my ($rows, $pager) = $db->search_by_sql_abstract_more_with_pager('user' => {type => 3}, {page => $page, rows => 5});
   
 If you want to replace Teng search
 
