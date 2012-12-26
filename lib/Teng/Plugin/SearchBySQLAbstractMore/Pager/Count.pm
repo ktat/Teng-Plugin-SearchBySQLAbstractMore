@@ -28,8 +28,8 @@ sub search_by_sql_abstract_more_with_pager {
     my ($total_entries, $itr);
     do {
         my $txn_scope = $self->txn_scope;
-        my $count_sth = $self->_execute($count_sql, \@$count_binds);
-        my $sth       = $self->_execute($sql,       \@$binds);
+        my $count_sth = $self->execute($count_sql, \@$count_binds);
+        my $sth       = $self->execute($sql,       \@$binds);
         ($total_entries) = $count_sth->fetchrow_array();
         $itr = Teng::Iterator->new(
                                    teng             => $self,

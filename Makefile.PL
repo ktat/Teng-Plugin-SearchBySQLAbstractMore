@@ -7,7 +7,7 @@ author   q{Ktat <ktat@cpan.org>};
 license  'perl';
 
 requires
-    'Teng'                       => 0,
+    'Teng'                       => 0.17,
     'SQL::Abstract::More'        => 0,
     'Data::Page'                 => 0,
     ;

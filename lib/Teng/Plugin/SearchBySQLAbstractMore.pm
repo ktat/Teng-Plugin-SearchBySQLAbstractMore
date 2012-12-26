@@ -49,7 +49,7 @@ sub search_by_sql_abstract_more {
     my $table = $self->schema->get_table($table_name) or Carp::croak("No such table $table_name");
     my ($sql, @binds) = $self->sql_abstract_more_instance->select(%$args);
 
-    my $sth = $self->_execute($sql, \@binds);
+    my $sth = $self->execute($sql, \@binds);
     my $itr = Teng::Iterator->new(
                                   teng             => $self,
                                   sth              => $sth,
