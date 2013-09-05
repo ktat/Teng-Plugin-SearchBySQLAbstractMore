@@ -178,7 +178,7 @@ Teng::Plugin::SearchBySQLAbstractMore - use L<SQL::Abstract::More> as Query Buil
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 
 =head1 SYNOPSIS

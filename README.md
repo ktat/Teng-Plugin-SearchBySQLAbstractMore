@@ -2,10 +2,6 @@
 
 Teng::Plugin::SearchBySQLAbstractMore - use [SQL::Abstract::More](http://search.cpan.org/perldoc?SQL::Abstract::More) as Query Builder for Teng
 
-# VERSION
-
-Version 0.07
-
 # SYNOPSIS
 
     package MyApp::DB;
