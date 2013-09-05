@@ -1,10 +1,11 @@
 use strict;
 use warnings;
-use t::Utils:mysql;
+use lib qw(./xt/ t/lib);
+use xt::Utils::mysql;
 use Mock::Basic;
 use Test::More;
 
-my $dbh = t::Utils->setup_dbh;
+my $dbh = t::Utils::setup_dbh();
 my $db = Mock::Basic->new({dbh => $dbh});
 $db->setup_test_db;
 # use fully qualified package name for coverage

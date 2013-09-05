@@ -162,6 +162,9 @@ foreach my $plugin (qw(MySQLFoundRows Count CountOrMySQLFoundRows)) {
         };
 }
 
+my $dbh = t::Utils->setup_dbh();
+my $db = Mock::Basic->new({dbh => $dbh});
+
 subtest 'search with join_and_hint_columns' => sub {
     my ($rows, $pager) = $db->search_by_sql_abstract_more_with_pager('mock_basic',{
     }, {

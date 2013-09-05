@@ -84,7 +84,7 @@ see Teng::Plugin::SearchBySQLAbstractMore
 
 =head1 CAUTION
 
-This solution is bad when you have many records.  You re-consider the inplementation where you want to use this module.
+This solution is bad when you have many records.  You re-consider the implementation where you want to use this module.
 If you are using MySQL, I recommend to use Pager::CountOrMySQLFoundRows or Pager::MySQLFoundRows.
 
 =head1 METHODS
@@ -96,7 +96,7 @@ additional parameter can be taken, C<page>, C<rows> and C<hint_columns>.
 
 =head3 hint_columns
 
-If you pass C<hint_columns>, or C<-hint_columns> as option and select using "GROUP BY", it uses thies values as select columns for calcurating total count.
+If you pass C<hint_columns>, or C<-hint_columns> as option and select using "GROUP BY", it uses these values as select columns for calculating total count.
 
 For example:
 

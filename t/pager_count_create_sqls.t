@@ -45,7 +45,7 @@ subtest "search_with_group_by",
 
      is _regularize($sql), 'select user_id, count(*), date(clicked_datetime) from clicks where ( user_id > ? ) group by user_id, date(clicked_datetime) limit ? offset ?';
      is_deeply $binds, [10, 20, 1];
-     is _regularize($count_sql), 'select count(*) as cnt from (select user_id, count(*), date(clicked_datetime) from clicks where ( user_id > ? ) group by user_id, date(clicked_datetime) ) as total_count';
+     is _regularize($count_sql), 'select count(*) as cnt from (select user_id, count(*), date(clicked_datetime) from clicks where ( user_id > ? ) group by user_id, date(clicked_datetime)) as total_count';
      is_deeply $count_binds, [10];
     };
 
@@ -64,7 +64,7 @@ subtest "search_group_by_and_having",
                 );
      is _regularize($sql), 'select user_id, count(*), date(clicked_datetime) from clicks group by user_id, date(clicked_datetime) having ( count(*) > ? ) limit ? offset ?';
      is_deeply $binds, [15, 20, 1];
-     is _regularize($count_sql), 'select count(*) as cnt from (select user_id, count(*), date(clicked_datetime) from clicks group by user_id, date(clicked_datetime) having ( count(*) > ? ) ) as total_count';
+     is _regularize($count_sql), 'select count(*) as cnt from (select user_id, count(*), date(clicked_datetime) from clicks group by user_id, date(clicked_datetime) having ( count(*) > ? )) as total_count';
      is_deeply $count_binds, [15];
     };
 
@@ -82,8 +82,8 @@ subtest "search_with_group_by_and_hint_columns",
                  }
                 );
      is _regularize($sql), 'select user_id, count(*), date(clicked_datetime) from clicks group by user_id, date(clicked_datetime) limit ? offset ?';
-     is_deeply $binds, [20, 1];
-     is _regularize($count_sql), 'select count(*) as cnt from (select user_id from clicks group by user_id, date(clicked_datetime) ) as total_count';
+     is_deeply $binds, [20, 1]; 
+     is _regularize($count_sql), 'select count(*) as cnt from (select user_id from clicks group by user_id, date(clicked_datetime)) as total_count';
      is_deeply $count_binds, [];
     };
 
@@ -102,8 +102,8 @@ subtest "search_group_by_and_hint_columns_and_having",
                  }
                 );
      is _regularize($sql), 'select user_id, count(*), date(clicked_datetime) from clicks group by user_id, date(clicked_datetime) having ( count(*) > ? ) limit ? offset ?';
-     is_deeply $binds, [15, 20, 1];
-     is _regularize($count_sql), 'select count(*) as cnt from (select count(*) from clicks group by user_id, date(clicked_datetime) having ( count(*) > ? ) ) as total_count';
+     is_deeply $binds, [15, 20, 1]; 
+     is _regularize($count_sql), 'select count(*) as cnt from (select count(*) from clicks group by user_id, date(clicked_datetime) having ( count(*) > ? )) as total_count';
      is_deeply $count_binds, [15];
     };
 
@@ -112,5 +112,6 @@ done_testing();
 sub _regularize {
     my ($sql) = @_;
     $sql =~s{\s+}{ }g;
+    $sql =~s{\) \) as }{)) as }i;
     lc $sql;
 }

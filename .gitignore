@@ -13,3 +13,10 @@ db1.db
 #*
 .#*
 .shipit
+/Teng-Plugin-SearchBySQLAbstractMore-*
+/.build
+/_build_params
+/Build
+!Build/
+!META.json
+!LICENSE
