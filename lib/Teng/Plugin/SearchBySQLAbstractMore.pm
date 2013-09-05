@@ -176,10 +176,6 @@ sub install_sql_abstract_more {
 
 Teng::Plugin::SearchBySQLAbstractMore - use L<SQL::Abstract::More> as Query Builder for Teng
 
-=head1 VERSION
-
-Version 0.07
-
 =cut
 
 our $VERSION = '0.11';
