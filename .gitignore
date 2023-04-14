@@ -20,3 +20,4 @@ db1.db
 !Build/
 !META.json
 !LICENSE
+.perl-version

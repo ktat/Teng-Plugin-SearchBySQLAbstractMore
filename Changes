@@ -2,6 +2,11 @@ Revision history for Teng-Plugin-SearchBySQLAbstractMore
 
 {{$NEXT}}
 
+0.13 2023-04-14T03:58:30Z
+	Change some files according to update Minilla version
+	Fix failed test.
+	Fix URLs in README.
+
 0.12 2013-09-05T16:45:32Z
 	use Minilla as CPAN authoring tool.
         fix some tests.
